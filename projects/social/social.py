@@ -1,3 +1,5 @@
+import random
+
 class User:
     def __init__(self, name):
         self.name = name
@@ -43,10 +45,29 @@ class SocialGraph:
         self.users = {}
         self.friendships = {}
         # !!!! IMPLEMENT ME
-
         # Add users
-
+        # call add_user() until our number of users is num_users
+        for i in range(num_users):
+            self.add_user(f"User {i+1}")
         # Create friendships
+        # totalFriendships = avg_friendships * num_users
+        # Generate a list of all possible friendships
+        possibleFriendships = []
+        # Avoid dups by ensuring the first ID is smaller than the second
+        for user_id in self.users:
+            for friend_id in range(user_id + 1, self.last_id + 1):
+                possibleFriendships.append((user_id, friend_id))
+        # Shuffle the list
+        random.shuffle(possibleFriendships)
+        # print("random friendships:")
+        # print(possibleFriendships)
+
+        # Slice off totalFriendships from the front, create friendships
+        totalFriendships = avg_friendships * num_users // 2
+        print(f"Friendships to create: {totalFriendships}\n")
+        for i in range(totalFriendships):
+            friendship = possibleFriendships[i]
+            self.add_friendship(friendship[0], friendship[1])
 
     def get_all_social_paths(self, user_id):
         """
@@ -59,7 +80,27 @@ class SocialGraph:
         """
         visited = {}  # Note that this is a dictionary, not a set
         # !!!! IMPLEMENT ME
-        return visited
+        q = []
+        q.append(user_id)
+        # initialize first path
+        visited[user_id] = [user_id]
+        # while queue is not empty
+        while len(q) > 0:
+            # grab first element from queue
+            cur = q.pop(0)
+            # for each friendship of cur
+            for friend in self.friendships[cur]:
+                # if friend has not been visited/is not key in visited dictionary
+                if friend not in visited:
+                    # add key to visited dictionary with existing path from userID plus the friend ID
+                    visited[friend] = visited[cur] + [friend]
+                    # add friend to queue
+                    q.append(friend)
+        percentage = len(visited.keys())/len(self.users.keys()) * 100
+        length = [len(x) for x in visited.values()]
+        # average subtracts 1 since first connection is from self
+        average = round(sum(length) / len(visited.keys()), 2) - 1
+        return f"{visited} \npercentage of all users in network: {percentage}% \naverage degree of separation: {average}"
 
 
 if __name__ == '__main__':
